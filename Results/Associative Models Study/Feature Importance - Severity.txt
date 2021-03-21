@@ -1,0 +1,45 @@
+Decision Tree
+0.391304347826087
+('ACS Functional State', 0.32970756113752364)
+('PP Pulse', 0.11994721905050544)
+('ASA', 0.1087664599029957)
+('ARISCAT Preoperative Anemia', 0.1052654223012958)
+('PP Peritoneal Contamination', 0.0631691909727901)
+('PP Sodium', 0.05185836216233808)
+('PP Hemoglobin', 0.04657568685068455)
+('PP Respiratory', 0.04492780754647938)
+('ARISCAT Emergent Procedure', 0.0435222743545609)
+('PP EKG', 0.041405514660618294)
+('PP Leukocytes', 0.034713216157108824)
+('ACS Dyspnoea', 0.01014128490309931)
+('PP Urea', 0.0)
+('PP N. of Procedure', 0.0)
+('ACS Systemic Sepsis', 0.0)
+Random Forest
+0.43478260869565216
+('ACS Functional State', 0.19694163167871145)
+('ASA', 0.10115120657272005)
+('ARISCAT Preoperative Anemia', 0.09175022155055733)
+('PP Pulse', 0.0795700207232531)
+('PP EKG', 0.07851261367660639)
+('ARISCAT Emergent Procedure', 0.07642461485546795)
+('PP Hemoglobin', 0.06374599231397264)
+('ACS Systemic Sepsis', 0.05482743262332247)
+('ACS Dyspnoea', 0.05401078507799805)
+('PP Respiratory', 0.05236936252333229)
+('PP Peritoneal Contamination', 0.050773823509238016)
+('PP Sodium', 0.04043613973690104)
+('PP Leukocytes', 0.02762110510566389)
+('PP Urea', 0.018275312510909046)
+('PP N. of Procedure', 0.01358973754134637)
+XGBoost
+[19:44:54] WARNING: ../src/learner.cc:541: 
+Parameters: { gamma, max_depth } might not be used.
+
+  This may not be accurate due to some parameters are only used in language bindings but
+  passed down to XGBoost core.  Or some parameters are not used but slip through this
+  verification. Please open an issue if you find above cases.
+
+
+[19:44:54] WARNING: ../src/learner.cc:1061: Starting in XGBoost 1.3.0, the default evaluation metric used with the objective 'multi:softprob' was changed from 'merror' to 'mlogloss'. Explicitly set eval_metric if you'd like to restore the old behavior.
+0.3391304347826087

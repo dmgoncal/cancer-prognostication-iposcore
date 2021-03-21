@@ -1,0 +1,82 @@
+*** Linear ***
+MAE =  1.08 ± 0.157
+RMSE =  1.729 ± 0.424
+R2 =  0.03 ± 0.122
+
+
+*** Ridge ***
+MAE =  1.071 ± 0.161
+RMSE =  1.724 ± 0.436
+R2 =  0.042 ± 0.105
+
+
+*** Lasso ***
+MAE =  1.079 ± 0.177
+RMSE =  1.776 ± 0.457
+R2 =  -0.007 ± 0.009
+
+
+*** SVM ***
+MAE =  1.001 ± 0.154
+RMSE =  1.79 ± 0.442
+R2 =  -0.031 ± 0.061
+
+
+*** Elastic ***
+MAE =  1.076 ± 0.176
+RMSE =  1.773 ± 0.457
+R2 =  -0.004 ± 0.01
+
+
+*** KNN ***
+MAE =  1.077 ± 0.152
+RMSE =  1.748 ± 0.44
+R2 =  0.016 ± 0.087
+
+
+*** DT ***
+MAE =  1.079 ± 0.151
+RMSE =  1.748 ± 0.433
+R2 =  0.013 ± 0.101
+
+
+*** RF ***
+MAE =  1.077 ± 0.151
+RMSE =  1.735 ± 0.428
+R2 =  0.027 ± 0.099
+
+
+*** XGB ***
+[14:40:29] WARNING: /workspace/src/objective/regression_obj.cu:152: reg:linear is now deprecated in favor of reg:squarederror.
+[14:40:29] WARNING: /workspace/src/objective/regression_obj.cu:152: reg:linear is now deprecated in favor of reg:squarederror.
+[14:40:29] WARNING: /workspace/src/objective/regression_obj.cu:152: reg:linear is now deprecated in favor of reg:squarederror.
+[14:40:29] WARNING: /workspace/src/objective/regression_obj.cu:152: reg:linear is now deprecated in favor of reg:squarederror.
+[14:40:29] WARNING: /workspace/src/objective/regression_obj.cu:152: reg:linear is now deprecated in favor of reg:squarederror.
+[14:40:29] WARNING: /workspace/src/objective/regression_obj.cu:152: reg:linear is now deprecated in favor of reg:squarederror.
+[14:40:30] WARNING: /workspace/src/objective/regression_obj.cu:152: reg:linear is now deprecated in favor of reg:squarederror.
+[14:40:30] WARNING: /workspace/src/objective/regression_obj.cu:152: reg:linear is now deprecated in favor of reg:squarederror.
+[14:40:30] WARNING: /workspace/src/objective/regression_obj.cu:152: reg:linear is now deprecated in favor of reg:squarederror.
+[14:40:30] WARNING: /workspace/src/objective/regression_obj.cu:152: reg:linear is now deprecated in favor of reg:squarederror.
+MAE =  1.075 ± 0.176
+RMSE =  1.772 ± 0.457
+R2 =  -0.003 ± 0.011
+
+
+*** PLS ***
+MAE =  1.079 ± 0.153
+RMSE =  1.73 ± 0.42
+R2 =  0.029 ± 0.116
+
+
+*** MLP ***
+MAE =  1.075 ± 0.157
+RMSE =  1.732 ± 0.426
+R2 =  0.029 ± 0.104
+
+
+*** CatBoost ***
+MAE =  1.062 ± 0.156
+RMSE =  1.745 ± 0.45
+R2 =  0.025 ± 0.057
+
+

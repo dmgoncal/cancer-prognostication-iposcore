@@ -1,0 +1,81 @@
+*** Naive Bayes ***
+Kappa = 0.24 ± 0.071
+Recall = [0.898 0.332]
+Recall AVG =  0.615 ± 0.29
+AUC =  0.686 ± 0.051
+F1 Score =  0.591 ± 0.047
+Accuracy =  0.64 ± 0.033
+
+
+*** KNN ***
+Kappa = 0.257 ± 0.102
+Recall = [0.777 0.473]
+Recall AVG =  0.625 ± 0.176
+AUC =  0.68 ± 0.07
+F1 Score =  0.621 ± 0.051
+Accuracy =  0.639 ± 0.053
+
+
+*** DT ***
+Kappa = 0.233 ± 0.119
+Recall = [0.644 0.59 ]
+Recall AVG =  0.617 ± 0.131
+AUC =  0.671 ± 0.062
+F1 Score =  0.611 ± 0.061
+Accuracy =  0.619 ± 0.062
+
+
+*** RF ***
+Kappa = 0.293 ± 0.095
+Recall = [0.726 0.564]
+Recall AVG =  0.645 ± 0.081
+AUC =  0.691 ± 0.057
+F1 Score =  0.645 ± 0.046
+Accuracy =  0.652 ± 0.048
+
+
+*** SVM ***
+Kappa = 0.282 ± 0.121
+Recall = [0.713 0.567]
+Recall AVG =  0.64 ± 0.098
+AUC =  0.676 ± 0.058
+F1 Score =  0.640 ± 0.06
+Accuracy =  0.646 ± 0.061
+
+
+*** Logistic ***
+Kappa = 0.272 ± 0.086
+Recall = [0.762 0.505]
+Recall AVG =  0.634 ± 0.14
+AUC =  0.685 ± 0.056
+F1 Score =  0.632 ± 0.041
+Accuracy =  0.645 ± 0.044
+
+
+*** XGB ***
+Kappa = 0.267 ± 0.104
+Recall = [0.777 0.484]
+Recall AVG =  0.631 ± 0.162
+AUC =  0.681 ± 0.064
+F1 Score =  0.628 ± 0.051
+Accuracy =  0.644 ± 0.052
+
+
+*** MLP ***
+Kappa = 0.285 ± 0.096
+Recall = [0.706 0.578]
+Recall AVG =  0.642 ± 0.101
+AUC =  0.663 ± 0.053
+F1 Score =  0.641 ± 0.05
+Accuracy =  0.648 ± 0.048
+
+
+*** CatBoost ***
+Kappa = 0.276 ± 0.109
+Recall = [0.751 0.522]
+Recall AVG =  0.636 ± 0.131
+AUC =  0.681 ± 0.064
+F1 Score =  0.635 ± 0.055
+Accuracy =  0.646 ± 0.053
+
+

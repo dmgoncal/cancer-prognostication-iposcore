@@ -6,7 +6,7 @@ import variables_translater
 
 import warnings
 warnings.filterwarnings("ignore")
-# from IPython.display import display
+from IPython.display import display
 
 from sklearn import preprocessing
 from sklearn.impute import KNNImputer
@@ -14,7 +14,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from imblearn.combine import SMOTETomek
-from imblearn.combine import SMOTEENN
+from imblearn.over_sampling import SMOTE
+# from imblearn.combine import SMOTEENN
 from sklearn.model_selection import KFold
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import MaxAbsScaler
@@ -23,24 +24,20 @@ from sklearn.metrics import recall_score
 from sklearn.metrics import cohen_kappa_score
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score
 # Regression Metrics
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
-
+# Model serializer
+import pickle
+# Tree Plotting
 from dtreeviz.trees import *
 import pydotplus
 from sklearn.tree import export_graphviz
 
-from yellowbrick.regressor import ResidualsPlot
-import copy
-
-import matplotlib.pyplot as plt
-from sklearn.metrics import auc as auc_calc
-from sklearn.metrics import plot_roc_curve
-
-def load_data(output,variables,filepath="./bd.xlsx"):
-    data = pd.read_excel(open(filepath, 'rb'), skiprows=1)
+def load_data(output,variables,filepath="./bd.xlsx",sheet=0):
+    data = pd.read_excel(open(filepath, 'rb'))
 
     # Resolve minor inconsistencies
     data.replace('sem dados', float('nan'),inplace=True)
@@ -50,8 +47,43 @@ def load_data(output,variables,filepath="./bd.xlsx"):
     # Select the features and the output
     dataset = data.loc[:,variables+[output]]
 
+    # # Used to obtain some statistics
+    # percent_missing = dataset.isnull().sum() * 100 / len(dataset)
+    # missing_value_df = pd.DataFrame({'column_name': dataset.columns,'percent_missing': percent_missing})
+    # print(missing_value_df)
+    # print(dataset['ACS peso'].max(),dataset['ACS peso'].min())
+    # print(dataset['dias na UCI'].max(),dataset['dias na UCI'].min())
+
     # To drop every line that has a NaN value on the TARGET column
     dataset.dropna(how="any",subset=dataset.columns[[-1]], inplace=True)
+
+    if(output==global_variables.outputs[1]):                          # apenas dos graus 1 a 6; com remoção de sub-graus
+      dataset = dataset[dataset["classificação clavien-dindo"] != 0]
+      dataset = dataset[dataset["classificação clavien-dindo"] != 7]
+      dataset.loc[dataset["classificação clavien-dindo"] == 4, "classificação clavien-dindo"] = 3
+      dataset.loc[dataset["classificação clavien-dindo"] == 5, "classificação clavien-dindo"] = 4
+      dataset.loc[dataset["classificação clavien-dindo"] == 6, "classificação clavien-dindo"] = 4
+
+    # if(output==global_variables.outputs[2]):                          # UCI
+    #   dataset.loc[dataset["dias na UCI"] <= 1, "dias na UCI"] = 0
+    #   dataset.loc[(dataset["dias na UCI"] <= 2) & (dataset["dias na UCI"] > 1), "dias na UCI"] = 1
+    #   dataset.loc[dataset["dias na UCI"] > 2, "dias na UCI"] = 2
+
+    # if(output==global_variables.outputs[6]):                          # IPOP
+    #   dataset.loc[dataset["dias no  IPOP"] <= 7, "dias no  IPOP"] = 0
+    #   dataset.loc[(dataset["dias no  IPOP"] <= 10) & (dataset["dias no  IPOP"] > 7), "dias no  IPOP"] = 1
+    #   dataset.loc[(dataset["dias no  IPOP"] <= 20) & (dataset["dias no  IPOP"] > 10), "dias no  IPOP"] = 2
+    #   dataset.loc[dataset["dias no  IPOP"] > 20, "dias no  IPOP"] = 3
+    
+    # if(output==global_variables.outputs[5]):                            # NAS
+    #   dataset.loc[dataset["total pontos NAS"] <= 60, "total pontos NAS"] = 0
+    #   dataset.loc[(dataset["total pontos NAS"] > 60) & (dataset["total pontos NAS"] < 120), "total pontos NAS"] = 1
+    #   dataset.loc[dataset["total pontos NAS"] >= 120, "total pontos NAS"] = 2
+    
+    if(output==global_variables.outputs[4]):
+      # Correct input inconsistency
+      dataset = dataset.loc[dataset["tempo decorrido após cirurgia (óbito)_até 1 ano"] != 0]
+      # dataset = dataset.loc[dataset["tempo decorrido após cirurgia (óbito)_até 1 ano"] != 3]
 
     return dataset
 
@@ -110,7 +142,8 @@ def tree_plot_regression(clf,dataset,headers,to_dummify,name=None):
     # if(name=='XGB'):
     #     print("gblinear")
     # else:
-    lista = list(zip(variables_translater.tradutor(list(X_train.columns)), clf.feature_importances_))
+    # lista = list(zip(variables_translater.tradutor(list(X_train.columns)), clf.feature_importances_))
+    lista = list(zip(list(X_train.columns), clf.feature_importances_))
     lista = sorted(lista, key=lambda par: par[1])
     lista.reverse()
     for el in lista:
@@ -193,7 +226,7 @@ def tree_plot_classification(clf,dataset,headers,to_dummify,name=None):
     X_column_labels = X_train.columns
 
     # Resampling (for imbalanced problems)
-    smt = SMOTEENN(random_state=42)
+    smt = SMOTETomek(smote=SMOTE(k_neighbors=3,random_state=42),random_state=42)
     X_train, y_train = smt.fit_resample(X_train, y_train)
 
     # Normalization
@@ -257,8 +290,103 @@ def tree_plot_classification(clf,dataset,headers,to_dummify,name=None):
 
         graph.write_png('colored_tree.png')
 
+def final_model(model, output, variables, dataset, headers, to_dummify, strat='class', n_outputs = 1, resample=True, test=False):
+
+    X = dataset[:,:-1]
+    y = dataset[:,-1]
+
+    # Missing values imputation, on X (using KNN)
+    imp = KNNImputer(n_neighbors=15)
+    X = imp.fit_transform(X)
+
+    X = pd.DataFrame(X,columns=headers[0:-1])
+
+    for col in to_dummify: # problem with imputer giving float values to categoric variables...
+      try:
+        X[col]=X[col].round(0)
+      except:
+        pass
+
+    # Dummification of categoric variables
+    transformer = ColumnTransformer(transformers=[('cat', OneHotEncoder(handle_unknown='ignore'), to_dummify)], remainder='passthrough')        
+    X = transformer.fit_transform(X)
+    
+    
+    if(resample):
+      # Resampling (for imbalanced problems)
+      smt = SMOTETomek(smote=SMOTE(k_neighbors=3,random_state=42),random_state=42)
+      X, y = smt.fit_resample(X, y)
+
+    # Normalization
+    scaler = MaxAbsScaler() 
+    X = scaler.fit_transform(X)
+
+    model.fit(X,y)
+
+    if not test:
+      # save the model to disk
+      pickle.dump(model, open(headers[-1]+'.sav', 'wb'))
+      # save the preprocessers
+      pickle.dump(imp, open(headers[-1]+' (imputer).sav', 'wb'))
+      pickle.dump(transformer, open(headers[-1]+' (transformer).sav', 'wb'))
+      pickle.dump(scaler, open(headers[-1]+' (scaler).sav', 'wb'))
+
+    if test:
+      data = load_data(output,variables,sheet='137 pacientes')
+      X_test = data.iloc[:,0:-1]
+      y_test = data.iloc[:,-1]
+
+      X_test = imp.transform(X_test)
+      X_test = transformer.transform(X_test)
+      X_test = scaler.transform(X_test)
+
+      y_pred = model.predict(X_test)
+
+      if strat == 'class':
+        y_pred_proba = model.predict_proba(X_test)
+        if(len(y_pred_proba[0])==2):
+          y_pred_proba = [el[-1] for el in y_pred_proba]
+        
+        recall = recall_score(y_test, y_pred, average=None)
+        kappa = cohen_kappa_score(y_test, y_pred)
+        auc = roc_auc_score(y_test, y_pred_proba,multi_class='ovo')
+        accuracy = accuracy_score(y_test, y_pred)
+        f1 = f1_score(y_test, y_pred, average='macro')
+
+        print('Kappa = '+str(kappa))
+        print('Recall = '+str(recall))
+        print('Recall AVG = '+str(sum(recall)/len(recall)))
+        print('AUC = '+str(auc))
+        print('F1 Score = '+str(f1))
+        print('Accuracy = '+str(accuracy))
+
+      if strat == 'reg':
+        # Metrics
+        mae = mean_absolute_error(y_test, y_pred)
+        rmse = mean_squared_error(y_test, y_pred, squared=False)
+        r2 = r2_score(y_test, y_pred)
+
+        # Discrete Metrics
+        y_test = [str(int(x)) if (int(x) <= n_outputs and int(x) >= 0) else (str(n_outputs) if int(x) > n_outputs else '0') for x in y_test]
+        y_pred = [str(int(x)) if (int(x) <= n_outputs and int(x) >= 0) else (str(n_outputs) if int(x) > n_outputs else '0') for x in y_pred]
+        
+        recall = recall_score(y_test, y_pred, average=None)
+        kappa = cohen_kappa_score(y_test, y_pred)
+        accuracy = accuracy_score(y_test, y_pred)
+        f1 = f1_score(y_test, y_pred, average='macro')
+
+        # print('Kappa = '+str(kappa))
+        # print('F1 = '+str(f1))
+        # print('Recall = '+str(recall))
+        # print('Recall AVG = '+str(sum(recall)/len(recall)))
+        # print('Accuracy = '+str(accuracy))
+        # print("------------------------------------")
+        print("MAE = "+str(mae))
+        print("RMSE = "+str(rmse))
+        print("R2 = "+str(r2))
+
 def data_preprocess(X_train, X_test, y_train, y_test, to_dummify, headers, resample=False):
-     # Missing values imputation, on X (using KNN)
+    # Missing values imputation, on X (using KNN)
     imp = KNNImputer(n_neighbors=15)
     X_train = imp.fit_transform(X_train)
     X_test = imp.transform(X_test)
@@ -277,11 +405,13 @@ def data_preprocess(X_train, X_test, y_train, y_test, to_dummify, headers, resam
     transformer = ColumnTransformer(transformers=[('cat', OneHotEncoder(handle_unknown='ignore'), to_dummify)], remainder='passthrough')        
     X_train = transformer.fit_transform(X_train)
     X_test = transformer.transform(X_test)
-
+    
     if(resample):
       # Resampling (for imbalanced problems)
-      smt = SMOTEENN(random_state=42)
+      smt = SMOTETomek(smote=SMOTE(k_neighbors=3,random_state=42),random_state=42)
       X_train, y_train = smt.fit_resample(X_train, y_train)
+
+    # X_test = X_test.values
 
     # Normalization
     scaler = MaxAbsScaler() 
@@ -296,18 +426,15 @@ def k_fold(clf,dataset,headers,to_dummify):
     recall = []
     auc = []
     accuracy = []
-
-    # Vars for ROC curve plot
-    # tprs = []
-    # aucs = []
-    # mean_fpr = np.linspace(0, 1, 100)
-    # fig, ax = plt.subplots()
-    # i=1
+    f1=[]
 
     skf = StratifiedKFold(n_splits=10, random_state=42, shuffle=True) #Stratified because of imbalance (avoid missing some classes randomly)
     for train_index, test_index in skf.split(dataset[:,:-1], dataset[:,-1]): 
 
         X_train, X_test, y_train, y_test = data_preprocess(dataset[:,:-1][train_index], dataset[:,:-1][test_index], dataset[:,-1][train_index], dataset[:,-1][test_index], to_dummify, headers, resample=True)
+
+        # print('train',list(zip(list(set(y_train)),[list(y_train).count(el) for el in list(set(y_train))])))
+        # print('test',list(zip(list(set(y_test)),[list(y_test).count(el) for el in list(set(y_test))])))
 
         try:
           clf.fit(X_train, y_train)
@@ -324,146 +451,169 @@ def k_fold(clf,dataset,headers,to_dummify):
         kappa.append(cohen_kappa_score(y_test, y_pred))
         auc.append(roc_auc_score(y_test, y_pred_proba,multi_class='ovo'))
         accuracy.append(accuracy_score(y_test, y_pred))
+        f1.append(f1_score(y_test, y_pred, average='macro'))
 
-        ########## ROC CURVE ###########
-        # viz = plot_roc_curve(clf, X_test, y_test,name='ROC fold {}'.format(i),alpha=0.3, lw=1, ax=ax)
-        # interp_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
-        # interp_tpr[0] = 0.0
-        # tprs.append(interp_tpr)
-        # aucs.append(viz.roc_auc)
-        # i+=1
-        ################################
-
-    print('Kappa = '+str(sum(kappa)/len(kappa)))
+    print("kappa (by fold) =",kappa)
+    print("recall (by fold) =",recall)
+    recall_multi = []
+    for scr in recall:
+      recall_multi.append(np.mean(scr))
+    print("recall multi (by fold) =",recall_multi)  
+    print("AUC (by fold) =",auc)
+    print("F1 (by fold) =",f1)
+    print("accuracy (by fold) =",accuracy)
+    print("------------------------------------")
+    print('Kappa (avg) =',round(np.mean(kappa),3),'±',round(np.std(kappa),3))
     recall_avg = np.zeros(len(recall[0]))
     for scr in recall:
       for i in range(0,len(scr)):
         recall_avg[i]+=scr[i]
     for i in range(0,len(recall_avg)):
         recall_avg[i] = round(recall_avg[i]/len(recall),3)
-    print('Recall = '+str(recall_avg))
-    print('AUC = '+str(sum(auc)/len(auc)))
-    print('Accuracy = '+str(sum(accuracy)/len(accuracy)))
-    print("------------------------------------")
-    print("kappa",kappa)
-    print("recall",recall)
-    print("AUC",auc)
-    print("accuracy",accuracy)
+    print('Recall (avg) = '+str(recall_avg))
+    print('Recall Multi (avg) = ',round(np.mean(recall),3),'±',round(np.std(recall),3))
+    print('AUC (avg) = ',round(np.mean(auc),3),'±',round(np.std(auc),3))
+    print('F1 Score (avg) = ',round(np.mean(f1),3),'±',round(np.std(f1),3))
+    print('Accuracy (avg) = ',round(np.mean(accuracy),3),'±',round(np.std(accuracy),3))
     print("\n")
 
-    ######## PLOT ROC CURVE ###########
-    # ax.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',label='Chance', alpha=.8)
-
-    # mean_tpr = np.mean(tprs, axis=0)
-    # mean_tpr[-1] = 1.0
-    # mean_auc = auc_calc(mean_fpr, mean_tpr)
-    # std_auc = np.std(aucs)
-    # ax.plot(mean_fpr, mean_tpr, color='b',label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, std_auc),lw=2, alpha=.8)
-
-    # std_tpr = np.std(tprs, axis=0)
-    # tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
-    # tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
-    # ax.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2,label=r'$\pm$ 1 std. dev.')
-
-    # ax.set(xlim=[-0.05, 1.05], ylim=[-0.05, 1.05],title="Receiver operating characteristic '"+variables_translater.tradutor([headers[-1]])[0]+"'")
-    # ax.legend(bbox_to_anchor=(1.00, 1), loc='upper left')
-    # plt.savefig('roc_k_fold_'+headers[-1]+'_'+type(clf).__name__+'.png',dpi=300, bbox_inches = "tight")
-    ###################################
-
-    return 1-np.mean(recall_avg)
+    # return 1-np.mean(recall_avg)
     # return 1-(sum(kappa)/len(kappa))
     # return 1-sum(auc)/len(auc)
+    # return 1-sum(accuracy)/len(accuracy)
+    return 1-np.mean(f1)
 
 def reg_k_fold(reg, dataset, headers, to_dummify, n_outputs = 1):
-
-    # model = copy.deepcopy(reg)
     mae = []
     rmse = []
     r2 = []
 
-    kappa = []
-    recall = []
-    accuracy = []
+    # kappa = []
+    # recall = []
+    # f1 = []
+    # accuracy = []
 
     cv = KFold(n_splits = 10, random_state = 42, shuffle = True)
     for train_index, test_index in cv.split(dataset[:,:-1], dataset[:,-1]):
         
         X_train, X_test, y_train, y_test = data_preprocess(dataset[:,:-1][train_index], dataset[:,:-1][test_index], dataset[:,-1][train_index], dataset[:,-1][test_index], to_dummify, headers)
 
-        try:
-          reg.fit(X_train, y_train)
-        except TypeError:
-          X_train = X_train.toarray()
-          X_test = X_test.toarray()
-          reg.fit(X_train, y_train)
-        except:
-          print("***###***FAILED_FIT***###***")
-          print("X_train:")
-          for col in X_train:
-            print("\n")
-            for li in col:
-              print(li, end =" ")
-          print("y_train:", *y_train)
-          for x in X_train:
-            if(pd.isnull(np.array(x)).any):
-              print(x)
+        reg.fit(X_train, y_train)
         y_pred = reg.predict(X_test)
         
         # Metrics
-        if(pd.isnull(np.array(y_pred)).any()):
-          print("***###***FAILED_PREDICT***###***")
-          print("y_pred:", *y_pred)
-          # print("X_test:")
-          # X_test
-          # print("y_test:", *y_test)
         mae.append(mean_absolute_error(y_test, y_pred))
         rmse.append(mean_squared_error(y_test, y_pred, squared=False))
         r2.append(r2_score(y_test, y_pred))
 
         # Discrete Metrics
-        y_test = [str(int(x)) if (int(x) <= n_outputs and int(x) >= 0) else (str(n_outputs) if int(x) > n_outputs else '0') for x in y_test]
-        y_pred = [str(int(x)) if (int(x) <= n_outputs and int(x) >= 0) else (str(n_outputs) if int(x) > n_outputs else '0') for x in y_pred]
+        # y_test = [str(int(x)) if (int(x) <= n_outputs and int(x) >= 0) else (str(n_outputs) if int(x) > n_outputs else '0') for x in y_test]
+        # y_pred = [str(int(x)) if (int(x) <= n_outputs and int(x) >= 0) else (str(n_outputs) if int(x) > n_outputs else '0') for x in y_pred]
         
-        recall.append(recall_score(y_test, y_pred, average=None))
-        kappa.append(cohen_kappa_score(y_test, y_pred))
-        accuracy.append(accuracy_score(y_test, y_pred))
+        # recall.append(recall_score(y_test, y_pred, average=None))
+        # kappa.append(cohen_kappa_score(y_test, y_pred))
+        # accuracy.append(accuracy_score(y_test, y_pred))
+        # f1.append(f1_score(y_test, y_pred, average='macro'))
 
-    print('Kappa = '+str(sum(kappa)/len(kappa)))
-    recall_avg = np.zeros(len(recall[0]))
-    for scr in recall:
-      for i in range(0,len(scr)):
-        recall_avg[i]+=scr[i]
-    for i in range(0,len(recall_avg)):
-        recall_avg[i] = round(recall_avg[i]/len(recall),3)
-    print('Recall = '+str(recall_avg))
-    print('Accuracy = '+str(sum(accuracy)/len(accuracy)))
-    print("------------------------------------")
-
-    print("MAE = "+str(sum(mae)/len(mae)))
-    print("RMSE = "+str(sum(rmse)/len(rmse)))
-    print("R2 = "+str(sum(r2)/len(r2)))
-    print("------------------------------------")
-
-    print("mae",mae)
-    print("rmse",rmse)
-    print("r2",r2)
-    print("-------------------------------------")
-
-    print("kappa",kappa)
-    print("recall",recall)
-    print("accuracy",accuracy)
+    # print('Kappa = '+str(sum(kappa)/len(kappa)))
+    # print('F1 = '+str(sum(f1)/len(f1)))
+    # recall_avg = np.zeros(n_outputs+1)
+    # for scr in recall:
+    #   for i in range(0,len(scr)):
+    #     recall_avg[i]+=scr[i]
+    # for i in range(0,len(recall_avg)):
+    #     recall_avg[i] = round(recall_avg[i]/len(recall),3)
+    # print('Recall = '+str(recall_avg))
+    # print('Accuracy = '+str(sum(accuracy)/len(accuracy)))
+    # print("------------------------------------")
+    print("mae (by fold) =",mae)
+    print("rmse (by fold) =",rmse)
+    print("r2 (by fold) =",r2)
+    # print("-------------------------------------")
+    print("MAE (avg) = ",round(np.mean(mae),3),'±',round(np.std(mae),3))
+    print("RMSE (avg) = ",round(np.mean(rmse),3),'±',round(np.std(rmse),3))
+    print("R2 (avg) = ",round(np.mean(r2),3),'±',round(np.std(r2),3))
+    # print("------------------------------------")
+    # print("kappa",kappa)
+    # print("recall",recall)
+    # print("accuracy",accuracy)
     print("\n")
 
-    ###### Plot Residuals ########
-    # X_train, X_test, y_train, y_test = train_test_split(dataset[:,0:-1], dataset[:,-1], test_size=0.33, random_state=42)
-    # X_train, X_test, y_train, y_test = data_preprocess(X_train, X_test, y_train, y_test, to_dummify, headers)
-    # try:
-    #   visualizer = ResidualsPlot(model)
-    #   visualizer.fit(X_train, y_train)
-    #   visualizer.score(X_test, y_test)
-    #   visualizer.show(outpath='roc_k_fold_'+headers[-1]+'_'+type(model).__name__+'.png',dpi=300, bbox_inches = "tight")
-    # except:
-    #   pass
-    ##############################
+    return sum(rmse)/len(rmse)
+    # return sum(mae)/len(mae)
+    # return 1-sum(r2)/len(r2)
 
-    return sum(mae)/len(mae)
+def feature_importance(clf,dataset,headers,to_dummify):
+
+    importances = {}
+
+    skf = StratifiedKFold(n_splits=10, random_state=42, shuffle=True) #Stratified because of imbalance (avoid missing some classes randomly)
+    for train_index, test_index in skf.split(dataset[:,:-1], dataset[:,-1]): 
+
+        X_train=dataset[:,:-1][train_index]
+        X_test=dataset[:,:-1][test_index]
+        y_train=dataset[:,-1][train_index]
+        y_test=dataset[:,-1][test_index]
+        
+        ##################################
+        # Missing values imputation, on X (using KNN)
+        imp = KNNImputer(n_neighbors=15)
+        X_train = imp.fit_transform(X_train)
+        X_test = imp.transform(X_test)
+
+        for col in to_dummify: # problem with imputer giving float values to categoric variables...
+          try:
+            X_train[col]=X_train[col].round(0)
+            X_test[col]=X_test[col].round(0)
+          except:
+            pass
+
+        X_train = pd.DataFrame(X_train,columns=headers[0:-1])
+        X_test = pd.DataFrame(X_test,columns=headers[0:-1]) 
+
+        # Dummification
+        encoder = OneHotEncoder(handle_unknown='ignore')
+
+        temp1 = encoder.fit_transform(X_train.loc[:,[headers[el] for el in to_dummify]])
+        temp2 = encoder.transform(X_test.loc[:,[headers[el] for el in to_dummify]])
+
+        labels_dummified = encoder.get_feature_names([headers[el] for el in to_dummify])
+        X_train = X_train.drop(columns=[headers[el] for el in to_dummify])
+        X_test = X_test.drop(columns=[headers[el] for el in to_dummify])
+        
+        temp1 = pd.DataFrame(temp1.toarray(),columns=labels_dummified)
+        temp2 = pd.DataFrame(temp2.toarray(),columns=labels_dummified)
+
+        X_train = pd.concat([X_train,temp1],axis=1)
+        X_test = pd.concat([X_test,temp2],axis=1)
+
+        X_column_labels = X_train.columns
+        
+        # Resampling (for imbalanced problems)
+        smt = SMOTETomek(smote=SMOTE(k_neighbors=3,random_state=42),random_state=42)
+        X_train, y_train = smt.fit_resample(X_train, y_train)
+
+        # X_test = X_test.values
+
+        # Normalization
+        scaler = MaxAbsScaler() 
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
+        ##################################
+
+        try:
+          clf.fit(X_train, y_train)
+        except:
+          X_train = X_train.toarray()
+          X_test = X_test.toarray()
+          clf.fit(X_train, y_train)
+
+        importance = clf.feature_importances_
+
+        for i,v in enumerate(importance):
+          if X_column_labels[i] in importances:
+            importances[X_column_labels[i]]+=v
+          else:
+            importances[X_column_labels[i]]=v
+
+    return sorted(importances.items(), key=lambda x:x[1], reverse=True)  

@@ -1,156 +1,162 @@
 outputs=[
-            "dias na UCI",
-            "complicação pós-cirúrgica",
-            "classificação clavien-dindo",
-            "óbito até 1 ano ",
-            "dias no  IPOP",
-            "óbito_tempo decorrido após data cirurgia (até 1 ano)"
-        ] # 6
+'complicação pós-cirúrgica',                        # CHECK     classificação
+'classificação clavien-dindo',                      # CHECK2    regressão (classificação)
+'dias na UCI',                                      # CHECK     regressão
+'óbito até 1 ano ',                                 # CHECK     classificação
+'tempo decorrido após cirurgia (óbito)_até 1 ano',  # CHECK     regressão (classificação)
+'total pontos NAS',                                 # CHECK     regressão
+'dias no  IPOP'                                     # CHECK     regressão
+]#7
+
+post_surgical=[
+'descrição complicação pós-cirúrgica',
+'complicação_COD',
+'classificação ACS complicações gerais',
+'classificação ACS complicações específicas',
+'destino após IPO',
+'data óbito',
+'Informação adicional',
+' reinternamento na UCI',
+'pontos NAS por dia',
+'motivo admissão UCI',
+'destino após UCI',
+'data admissão UCI',
+'proveniência',
+'tipo pedido anestesia',
+'Operação efetuada',
+'Intervenções_ICD10',
+'PP perda sangue'
+]#17
 
 numericas=[
-            "idade",
-            # "total pontos NAS",       # POS
-            # "pontos NAS por dia",     # POS
-            "Score fisiológico P-Possum",
-            "Score gravidade cirúrgica P-Possum",
-            "% morbilidade P-Possum",
-            "% mortalidade P-Possum",
-            "ACS altura",
-            "ACS peso",
-            "complicações sérias (%)",
-            "risco médio",
-            "qualquer complicação (%)",
-            "risco médio.1",
-            "pneumonia (%)",
-            "risco médio.2",
-            "complicações cardíacas (%)",
-            "risco médio.3",
-            "infeção cirúrgica (%)",
-            "risco médio.4",
-            "ITU (%)",
-            "risco médio.5",
-            "tromboembolismo venoso (%)",
-            "risco médio.6",
-            "falência renal (%)",
-            "risco médio.7",
-            # "ileus (%)",              # MISSING VALUES
-            # "risco médio.8",          # MISSING VALUES
-            # "fuga anastomótica (%)",  # MISSING VALUES
-            # "risco médio.9",          # MISSING VALUES
-            "readmissão (%)",
-            "risco médio.10",
-            "reoperação (%)",
-            "risco médio.11",
-            "morte (%)",
-            "risco médio.12",
-            "Discharge to Nursing or Rehab Facility (%)",
-            "risco médio.13",
-            "ACS - previsão dias internamento",
-            "ARISCAT PONTUAÇÃO TOTAL",
-            "SCORE ARISCAT"
-            # "PONTOS - Charlson Comorbidity Index", # MISSING VALUES
-            # "% Sobrevida estimada em 10 anos"      # MISSING VALUES
-            ] # 42 ou 34 efetivas
+'idade',
+'ACS altura',
+'ACS peso'
+]#3
 
 nominais = [
-            "especialidade",
-            "LOCALIZAÇÃO ",                         #muito fácil de usar estratégia de bags
-            "diagnóstico pré-operatório",
-            #"Operação efetuada",                                             # POS
-            #"procedimentos_COD",                   #muitos missing           # POS
-            #"descrição complicação pós-cirúrgica",                           # POS
-            #"complicação_COD",                     #muitos missing           # POS
-            # "Informação adicional",               #muitos missing           # POS
-            "Comorbilidades pré-operatórias"
-        ] # 9 ou 4 efetivas
-
-codigos = [
-            #"Intervenções_ICD10",                  # POS
-            "ACS_procedimento"
-        ] # 2 ou 1 efetiva
+'especialidade',
+# 'Patologia',                                      # missing values
+'diagnóstico pré-operatório',
+#'procedimentos_COD',                               # missing values
+'ACS_procedimento',
+'Comorbilidades pré-operatórias'
+] #4
+# especialidade tem substituto (COD), Patologia tem missing values...
 
 categoricas = [
-                #"tipo pedido anestesia",           # POS
-                #"proveniência",                    # POS
-                #"motivo admissão UCI",             # POS
-                "tipo cirurgia",
-                "especialidade_COD",
-                #"destino após UCI",                # POS
-                "ASA",
-                "PP idade",
-                "PP cardíaco",
-                "PP respiratório",
-                "PP ECG",
-                "PP pressão arterial sistólica",
-                "PP pulsação arterial",
-                "PP hemoglobina",
-                "PP leucócitos",
-                "PP ureia",
-                "PP sódio",
-                "PP potássio",
-                "PP escala glasglow",
-                "PP tipo operação",
-                "PP nº procedimentos",
-                "PP perda sangue",
-                "PP contaminação peritoneal",
-                "PP estado da malignidade",
-                "PP CEPOD-classificação operação",
-                "ACS idade",
-                "ACS estado funcional",
-                "ACS ASA",
-                "ACS sépsis sistémica",
-                "ACS diabetes",
-                "ACS dispneia",
-                "ARISCAT Idade",
-                "ARISCAT SpO2 ",
-                "ARISCAT incisão cirúrgica",
-                "ARISCAT duração cirurgia"
-                # "CHARLSON Idade",                                     # MISSING VALUES
-                # "CHARLSON Diabetes mellitus",                         # MISSING VALUES
-                # "CHARLSON Doença fígado",                             # MISSING VALUES
-                # "CHARLSON Malignidade",                               # MISSING VALUES
-                #"complicação principal_COD",                           # POS
-                #"classificação ACS complicações específicas",          # POS
-                #"destino após IPO"                                     # POS
-                ] # 42 ou 31 efetivas
+'especialidade_COD'
+]#1
 
 binarias = [
-            "género",
-            "1ª Cirurgia IPO",
-            "QT pré-operatória",
-            #" reinternamento na UCI",      # POS
-            "ACS género",
-            "ACS emergência",
-            "ACS esteróides",
-            "ACS ascite",
-            "ACS dependente ventilador",
-            "ACS cancro disseminado",
-            "ACS hipertensão",
-            "ACS ICC",
-            "ACS fumador",
-            "ACS DPOC",
-            "ACS diálise",
-            "ACS insuficiência renal aguda",
-            "ARISCAT infeção respiratória último mês",
-            "ARISCAT anemia pré-operativa",
-            "ARISCAT procedimento emergente"
-            # "CHARLSON SIDA",
-            # "CHARLSON Doença Renal Crónica Moderada a Severa",    # MISSING VALUES
-            # "CHARLSON Insuficiência Cardíaca",                    # MISSING VALUES
-            # "CHARLSON Enfarte Miocárdio",                         # MISSING VALUES
-            # "CHARLSON DPOC",                                      # MISSING VALUES
-            # "CHARLSON Doença Vascular periférica",                # MISSING VALUES
-            # "CHARLSON AVC ou Ataque Isquémico Transitório",       # MISSING VALUES
-            # "CHARLSON Demência",                                  # MISSING VALUES
-            # "CHARLSON Hemiplegia",                                # MISSING VALUES
-            # "CHARLSON Doença do Tecido Conjuntivo",               # MISSING VALUES
-            # "CHARLSON Úlcera Péptica",                            # MISSING VALUES
-            #"classificação ACS complicações gerais"                # POS
-        ] # 31 ou 18 efetivas
+# 'tipo cirurgia',                                      # low variance (0.1)
+'género',
+# '1ª Cirurgia IPO',                                    # high correlation
+'QT pré-operatória',
+# 'ACS género',                                         # repetida
+# 'ACS emergência',                                     # repetida
+'ACS esteróides',
+# 'ACS ascite',                                         # low variance (0.1)
+# 'ACS dependente ventilador',                          # Low Variance
+'ACS cancro disseminado',
+'ACS hipertensão',
+'ACS ICC',
+'ACS fumador',
+'ACS DPOC',
+# 'ACS diálise',                                        # Low variance
+'ACS insuficiência renal aguda',
+'ARISCAT infeção respiratória último mês',
+'ARISCAT anemia pré-operativa',
+'ARISCAT procedimento emergente'
+# 'CHARLSON SIDA',                                      # missing values...
+# 'CHARLSON Doença Renal Crónica Moderada a Severa',
+# 'CHARLSON Insuficiência Cardíaca',
+# 'CHARLSON Enfarte Miocárdio',
+# 'CHARLSON DPOC',
+# 'CHARLSON Doença Vascular periférica',
+# 'CHARLSON AVC ou Ataque Isquémico Transitório',
+# 'CHARLSON Demência',
+# 'CHARLSON Hemiplegia',
+# 'CHARLSON Doença do Tecido Conjuntivo',
+# 'CHARLSON Úlcera Péptica'
+]#12
 
 datas = [
-            #"data pedido pela anestesia",      # POS
-            #"data admissão UCI",               # POS
-            "data cirurgia"
-            #"data óbito"  # muitos missing     # POS
-        ] # 4 ou 1 efetiva
+'data pedido anestesia',
+'data cirurgia'             
+]#2
+
+ordinais = [
+'ASA',
+# 'PP idade',                                           # repetido
+'PP respiratório',
+'PP ECG',
+'PP pulsação arterial',
+'PP pressão arterial sistólica',
+'PP cardíaco',
+'PP hemoglobina',
+'PP leucócitos',
+'PP ureia',
+'PP sódio',
+'PP potássio',
+# 'PP escala glasglow',                                 # low variance
+# 'PP tipo operação',                                   # low variance
+'PP nº procedimentos',
+'PP contaminação peritoneal',
+'PP estado da malignidade',
+# 'PP CEPOD-classificação operação',                    # high correlation
+# 'ACS idade',                                          # repetido
+'ACS estado funcional',
+# 'ACS ASA',                                            # repetido
+'ACS sépsis sistémica',
+'ACS diabetes',
+'ACS dispneia',
+'ARISCAT Idade',
+# 'ARISCAT SpO2 ',                                     # low variance (0.1)     (CONSIDERED)
+# 'ARISCAT incisão cirúrgica',                         # high correlation     (CONSIDERED)
+'ARISCAT duração cirurgia'
+# 'CHARLSON Idade',                                    # missing values
+# 'CHARLSON Diabetes mellitus',                        # missing values
+# 'CHARLSON Doença fígado',                            # missing values
+# 'CHARLSON Malignidade'                               # missing values
+]#20
+
+res_calculadoras = [
+'Score fisiológico P-Possum',
+'Score gravidade cirúrgica P-Possum',
+'% morbilidade P-Possum',
+'% mortalidade P-Possum',
+'complicações sérias (%)',
+'risco médio',
+'qualquer complicação (%)',
+'risco médio',
+'pneumonia (%)',
+'risco médio',
+'complicações cardíacas (%)',
+'risco médio',
+'infeção cirúrgica (%)',
+'risco médio',
+'ITU (%)',
+'risco médio',
+'tromboembolismo venoso (%)',
+'risco médio',
+'falência renal (%)',
+'risco médio',
+'ileus (%)',
+'risco médio',
+'fuga anastomótica (%)',
+'risco médio',
+'readmissão (%)',
+'risco médio',
+'reoperação (%)',
+'risco médio',
+'morte (%)',
+'risco médio',
+'Discharge to Nursing or Rehab Facility (%)',
+'risco médio',
+'ACS - previsão dias internamento',
+'ARISCAT PONTUAÇÃO TOTAL',
+'SCORE ARISCAT',
+'PONTOS - Charlson Comorbidity Index',
+'% Sobrevida estimada em 10 anos'
+]#37
