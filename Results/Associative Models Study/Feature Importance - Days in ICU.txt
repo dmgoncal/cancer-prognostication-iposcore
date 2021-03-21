@@ -6,6 +6,7 @@ Decision Tree
 ('ARISCAT anemia pré-operativa', 0.01937301652661969)
 ('ACS insuficiência renal aguda', 0.0)
 ('PP nº procedimentos', 0.0)
+
 Random Forest
 ('ARISCAT duração cirurgia', 0.4080972536440268)
 ('ACS sépsis sistémica', 0.23279901314451085)
@@ -14,12 +15,5 @@ Random Forest
 ('ARISCAT anemia pré-operativa', 0.052956130315048526)
 ('ACS insuficiência renal aguda', 0.021265379169974015)
 ('ARISCAT procedimento emergente', 0.01966088355358838)
-XGBoost
-[19:16:16] WARNING: ../src/learner.cc:541: 
-Parameters: { gamma, max_depth } might not be used.
-
-  This may not be accurate due to some parameters are only used in language bindings but
-  passed down to XGBoost core.  Or some parameters are not used but slip through this
-  verification. Please open an issue if you find above cases.
 
 

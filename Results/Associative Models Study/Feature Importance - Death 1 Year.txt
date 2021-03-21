@@ -6,6 +6,7 @@ Decision Tree
 ('PP Hemoglobin', 0.02691092224058116)
 ('ACS Systemic Sepsis', 0.0)
 ('PP Peritoneal Contamination', 0.0)
+
 Random Forest
 ('ACS Functional State', 0.2681178414328547)
 ('ASA', 0.21499447442257122)
@@ -14,8 +15,8 @@ Random Forest
 ('PP Hemoglobin', 0.129361328404574)
 ('PP Peritoneal Contamination', 0.030503624140625418)
 ('ACS Systemic Sepsis', 0.008821496532295078)
+
 XGBoost
-[19:52:14] WARNING: ../src/learner.cc:1061: Starting in XGBoost 1.3.0, the default evaluation metric used with the objective 'binary:logistic' was changed from 'error' to 'logloss'. Explicitly set eval_metric if you'd like to restore the old behavior.
 ('ACS Functional State', 0.3343819)
 ('ASA', 0.23473787)
 ('PP Malignancy State', 0.21979262)
