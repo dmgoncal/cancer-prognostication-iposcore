@@ -10,3 +10,5 @@ Access to the original dataset is restricted due to data privacy concerns. To kn
 - Daniel Gonçalves, dmateusgoncalves@tecnico.ulisboa.pt
 - Rafael Costa, rafael.s.costa@tecnico.ulisboa.pt
 - Rui Henriques, rmch@tecnico.ulisboa.pt
+
+This repository contains the code files used in the article:” Gonçalves, D., Henriques, R., Santos, L. L., Costa, R.S. On the predictability of postoperative complications for cancer patients:  a Portuguese cohort study. BMC Medical Informatics and Decision Making, 21, 200 (2021) | doi: [10.1186/s12911-021-01562-2](https://bmcmedinformdecismak.biomedcentral.com/articles/10.1186/s12911-021-01562-2).
